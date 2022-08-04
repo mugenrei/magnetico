@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,7 +30,7 @@ func NewApiReadmeHandler() (*ApiReadmeHandler, error) {
 	h := new(ApiReadmeHandler)
 	var err error
 
-	h.tempdir, err = ioutil.TempDir("", "magneticod_")
+	h.tempdir, err = os.MkdirTemp("", "magneticod_")
 	if err != nil {
 		return nil, err
 	}
