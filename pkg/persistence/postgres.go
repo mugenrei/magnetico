@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"text/template"
 	"time"
 	"unicode/utf8"
 
@@ -205,20 +206,50 @@ func (db *postgresDatabase) QueryTorrents(
 		return nil, fmt.Errorf("lastOrderedValue and lastID should be supplied together, if supplied")
 	}
 
-	//doJoin := query != ""
-	//firstPage := lastID == nil
+	firstPage := lastID == nil
 
 	// executeTemplate is used to prepare the SQL query, WITH PLACEHOLDERS FOR USER INPUT.
-	rows, err := db.conn.Query(`
+	sqlQuery := executeTemplate(`
 		SELECT id 
              , info_hash
 			 , name
 			 , total_size
 			 , discovered_on
 			 , (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
-		FROM torrents
-		LIMIT $1;`, limit)
+		FROM torrents {{ if not .FirstPage }}
+        WHERE {{.OrderOn}} {{GTEorLTE .Ascending}} {{.LastOrderedValue}} {{ end }}
+		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}
+		LIMIT {{.Limit}};
+	`, struct {
+		FirstPage        bool
+		OrderOn          string
+		Ascending        bool
+		Limit            uint
+		LastOrderedValue *float64
+	}{
+		FirstPage:        firstPage,
+		OrderOn:          orderOn(orderBy),
+		Ascending:        ascending,
+		Limit:            limit,
+		LastOrderedValue: lastOrderedValue,
+	}, template.FuncMap{
+		"GTEorLTE": func(ascending bool) string {
+			if ascending {
+				return ">"
+			} else {
+				return "<"
+			}
+		},
+		"AscOrDesc": func(ascending bool) string {
+			if ascending {
+				return "ASC"
+			} else {
+				return "DESC"
+			}
+		},
+	})
 
+	rows, err := db.conn.Query(sqlQuery)
 	defer db.closeRows(rows)
 	if err != nil {
 		zap.L().Error(fmt.Sprint(err))
