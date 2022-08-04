@@ -197,7 +197,53 @@ func (db *postgresDatabase) QueryTorrents(
 	lastOrderedValue *float64,
 	lastID *uint64,
 ) ([]TorrentMetadata, error) {
-	return nil, NotImplementedError
+
+	if query == "" && orderBy == ByRelevance {
+		return nil, fmt.Errorf("torrents cannot be ordered by relevance when the query is empty")
+	}
+	if (lastOrderedValue == nil) != (lastID == nil) {
+		return nil, fmt.Errorf("lastOrderedValue and lastID should be supplied together, if supplied")
+	}
+
+	//doJoin := query != ""
+	//firstPage := lastID == nil
+
+	// executeTemplate is used to prepare the SQL query, WITH PLACEHOLDERS FOR USER INPUT.
+	rows, err := db.conn.Query(`
+		SELECT id 
+             , info_hash
+			 , name
+			 , total_size
+			 , discovered_on
+			 , (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
+		FROM torrents
+		LIMIT $1;`, limit)
+
+	defer db.closeRows(rows)
+	if err != nil {
+		zap.L().Error(fmt.Sprint(err))
+		return nil, errors.Wrap(err, "query error")
+	}
+
+	torrents := make([]TorrentMetadata, 0)
+	for rows.Next() {
+		var torrent TorrentMetadata
+		err = rows.Scan(
+			&torrent.ID,
+			&torrent.InfoHash,
+			&torrent.Name,
+			&torrent.Size,
+			&torrent.DiscoveredOn,
+			&torrent.NFiles,
+			//&torrent.Relevance,
+		)
+		if err != nil {
+			return nil, err
+		}
+		torrents = append(torrents, torrent)
+	}
+
+	return torrents, nil
 }
 
 func (db *postgresDatabase) GetTorrent(infoHash []byte) (*TorrentMetadata, error) {
@@ -234,7 +280,8 @@ func (db *postgresDatabase) GetFiles(infoHash []byte) ([]File, error) {
 		SELECT
        		f.size,
        		f.path 
-		FROM files f, torrents t WHERE f.torrent_id = t.id AND t.info_hash = $1;`,
+		FROM files f, torrents t 
+		WHERE f.torrent_id = t.id AND t.info_hash = $1;`,
 		infoHash,
 	)
 	defer db.closeRows(rows)
