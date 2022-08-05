@@ -198,7 +198,6 @@ func (db *postgresDatabase) QueryTorrents(
 	lastOrderedValue *float64,
 	lastID *uint64,
 ) ([]TorrentMetadata, error) {
-
 	if query == "" && orderBy == ByRelevance {
 		return nil, fmt.Errorf("torrents cannot be ordered by relevance when the query is empty")
 	}
@@ -216,8 +215,23 @@ func (db *postgresDatabase) QueryTorrents(
 			 , total_size
 			 , discovered_on
 			 , (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
-		FROM torrents {{ if not .FirstPage }}
-        WHERE {{.OrderOn}} {{GTEorLTE .Ascending}} {{.LastOrderedValue}} {{ end }}
+			{{ if .QueryExists }}
+			, similarity(name, '{{ .Query }}') * -1 as relevance 
+			{{ else }}
+			 , 0
+			{{ end }}
+		FROM torrents 
+		{{ if not .FirstPage }}
+        	WHERE
+			{{ if not .QueryExists }}
+				{{.OrderOn}}
+			{{ else }}
+				similarity(name, '{{ .Query }}') * -1
+			{{ end }}
+{{GTEorLTE .Ascending}} {{.LastOrderedValue}} 
+			{{ if .QueryExists }} AND {{ end }}
+		{{ end }}
+			{{ if and .QueryExists .FirstPage }} WHERE {{ end }}{{ if .QueryExists }} to_tsvector(replace(name, '.', ' ')) @@ plainto_tsquery('{{ .Query }}') {{ end }}
 		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}
 		LIMIT {{.Limit}};
 	`, struct {
@@ -226,12 +240,16 @@ func (db *postgresDatabase) QueryTorrents(
 		Ascending        bool
 		Limit            uint
 		LastOrderedValue *float64
+		QueryExists      bool
+		Query            string
 	}{
 		FirstPage:        firstPage,
-		OrderOn:          orderOn(orderBy),
+		OrderOn:          orderOnPostgreSQL(orderBy),
 		Ascending:        ascending,
 		Limit:            limit,
 		LastOrderedValue: lastOrderedValue,
+		QueryExists:      query != "",
+		Query:            query,
 	}, template.FuncMap{
 		"GTEorLTE": func(ascending bool) string {
 			if ascending {
@@ -266,7 +284,7 @@ func (db *postgresDatabase) QueryTorrents(
 			&torrent.Size,
 			&torrent.DiscoveredOn,
 			&torrent.NFiles,
-			//&torrent.Relevance,
+			&torrent.Relevance,
 		)
 		if err != nil {
 			return nil, err
@@ -275,6 +293,25 @@ func (db *postgresDatabase) QueryTorrents(
 	}
 
 	return torrents, nil
+}
+
+func orderOnPostgreSQL(orderBy OrderingCriteria) string {
+	switch orderBy {
+	case ByRelevance:
+		return "relevance"
+
+	case ByTotalSize:
+		return "total_size"
+
+	case ByDiscoveredOn:
+		return "discovered_on"
+
+	case ByNFiles:
+		return "n_files"
+
+	default:
+		panic(fmt.Sprintf("unknown orderBy: %v", orderBy))
+	}
 }
 
 func (db *postgresDatabase) GetTorrent(infoHash []byte) (*TorrentMetadata, error) {
