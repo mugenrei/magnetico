@@ -91,7 +91,7 @@ func (is *IndexingService) index() {
 		if routingTableLen == 0 {
 			is.bootstrap()
 		} else {
-			zap.L().Info("Latest status:", zap.Int("n", routingTableLen),
+			zap.L().Debug("Latest status:", zap.Int("n", routingTableLen),
 				zap.Uint("maxNeighbors", is.maxNeighbors))
 			//TODO
 			is.findNeighbors()
