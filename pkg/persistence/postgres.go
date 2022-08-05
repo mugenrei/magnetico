@@ -333,7 +333,66 @@ func (db *postgresDatabase) GetFiles(infoHash []byte) ([]File, error) {
 }
 
 func (db *postgresDatabase) GetStatistics(from string, n uint) (*Statistics, error) {
-	return nil, NotImplementedError
+	fromTime, gran, err := ParseISO8601(from)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing ISO8601 error")
+	}
+
+	var toTime time.Time
+	var timeF string // time format: https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-TRUNC
+
+	switch gran {
+	case Year:
+		toTime = fromTime.AddDate(int(n), 0, 0)
+		timeF = "year"
+	case Month:
+		toTime = fromTime.AddDate(0, int(n), 0)
+		timeF = "month"
+	case Week:
+		toTime = fromTime.AddDate(0, 0, int(n)*7)
+		timeF = "week"
+	case Day:
+		toTime = fromTime.AddDate(0, 0, int(n))
+		timeF = "day"
+	case Hour:
+		toTime = fromTime.Add(time.Duration(n) * time.Hour)
+		timeF = "hour"
+	}
+
+	// TODO: make it faster!
+	rows, err := db.conn.Query(fmt.Sprintf(`
+			SELECT date_trunc('%s', to_timestamp(discovered_on)) AS dT
+                 , sum(files.size) AS tS
+                 , count(DISTINCT torrents.id) AS nD              
+                 , count(DISTINCT files.id) AS nF
+			FROM torrents, files
+ 			WHERE     torrents.id = files.torrent_id
+                  AND discovered_on >= $1
+                  AND discovered_on <= $2
+			GROUP BY dt;`, timeF),
+		fromTime.Unix(), toTime.Unix())
+	defer closeRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	stats := NewStatistics()
+
+	for rows.Next() {
+		var dT string
+		var tS, nD, nF uint64
+		if err := rows.Scan(&dT, &tS, &nD, &nF); err != nil {
+			if err := rows.Close(); err != nil {
+				panic(err.Error())
+			}
+			return nil, err
+		}
+		stats.NDiscovered[dT] = nD
+		stats.TotalSize[dT] = tS
+		stats.NFiles[dT] = nF
+	}
+
+	return stats, nil
 }
 
 func (db *postgresDatabase) setupDatabase() error {
