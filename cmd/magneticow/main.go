@@ -274,13 +274,13 @@ func loadCred(cred string) error {
 	reader := bufio.NewReader(file)
 	for lineno := 1; true; lineno++ {
 		line, err := reader.ReadBytes('\n')
+		zap.L().Debug("Credentials: " + string(line))
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 			return errors.Wrapf(err, "while reading line %d", lineno)
 		}
-
 		line = line[:len(line)-1] // strip '\n'
 
 		/* The following regex checks if the line satisfies the following conditions:
@@ -297,7 +297,6 @@ func loadCred(cred string) error {
 		if !re.Match(line) {
 			return fmt.Errorf("on line %d: format should be: <USERNAME>:<BCRYPT HASH>, instead got: %s", lineno, line)
 		}
-
 		tokens := bytes.Split(line, []byte(":"))
 		opts.Credentials[string(tokens[0])] = tokens[1]
 	}
@@ -310,7 +309,7 @@ func loadCred(cred string) error {
 //
 // Most web browser display a dialog with something like:
 //
-//    The website says: "<realm>"
+//	The website says: "<realm>"
 //
 // Which is really stupid so you may want to set the realm to a message rather than
 // an actual realm.
@@ -333,12 +332,14 @@ func BasicAuth(handler http.HandlerFunc, realm string) http.HandlerFunc {
 		hashedPassword, ok := opts.Credentials[username]
 		opts.CredentialsRWMutex.RUnlock()
 		if !ok { // User not found
+			zap.L().Error("User \"" + string(username) + "\" not found!")
 			authenticate(w, realm)
 			return
 		}
 
 		if err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(password)); err != nil { // Wrong password
 			authenticate(w, realm)
+			zap.L().Error("Wrong password provided!")
 			return
 		}
 
