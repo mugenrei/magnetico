@@ -51,7 +51,7 @@ files while it is operating, but ``database.sqlite3`` is *the database*.
 
 #### More engines (PostgreSQL and others)
 
-You can read about other supported persistence engines [here](pkg/README.md).
+You can read about other supported persistence engines [here](../../pkg/README.md).
 
 ### Using the Docker Image
 You need to mount
