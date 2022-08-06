@@ -22,21 +22,12 @@ header div a {
 }
 
 
-header form {
+#query {
     max-width: 600px;
     width: 100%;
-
-    margin-left: 0.5em;
-    margin-right: 0.5em;
 }
 
-
-header form input {
-    width: 100%;
-}
-
-
-header > div {
+header > div, select, input {
     margin-right: 0.5em;
 }
 

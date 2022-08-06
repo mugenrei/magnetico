@@ -1,6 +1,6 @@
 "use strict";
 
-const query = (new URL(location)).searchParams.get("query")
+let query = (new URL(location)).searchParams.get("query")
     , epoch = Math.floor(Date.now() / 1000)
 ;
 let orderBy, ascending;  // use `setOrderBy()` to modify orderBy
@@ -26,12 +26,42 @@ window.onload = function () {
         setOrderBy("DISCOVERED_ON");
     }
 
+    const feedAnchor = document.getElementById("feed-anchor");
+    const sortDropdown = document.getElementById("sort-dropdown");
     if (query) {
-        const feedAnchor = document.getElementById("feed-anchor");
         feedAnchor.setAttribute("href", "/feed?query=" + encodeURIComponent(query));
+    } else {
+        sortDropdown.selectedIndex = 3
     }
 
-    load();
+    const queryInput = document.getElementById("query");
+    queryInput.onchange = sortDropdown.onchange = function () {
+        const ul = document.querySelector("main ul");
+
+        query = queryInput.value
+        switch (sortDropdown.selectedIndex) {
+            case 1:
+                setOrderBy("TOTAL_SIZE")
+                break;
+            case 3:
+                setOrderBy("DISCOVERED_ON")
+                break;
+            case 5:
+                setOrderBy("N_FILES")
+                break;
+        }
+
+        if (query !== '') {
+            setOrderBy("RELEVANCE");
+        }
+
+        ul.innerHTML = ""
+        lastID = null
+        lastOrderedValue = null
+        load(queryInput.value);
+    };
+
+    load(query);
 };
 
 
@@ -62,15 +92,19 @@ function orderedValue(torrent) {
 }
 
 
-function load() {
+function load(queryParam) {
     const button = document.getElementsByTagName("button")[0];
     button.textContent = "Loading More Results...";
     button.setAttribute("disabled", "");  // disable the button whilst loading...
 
+    if (queryParam == null) {
+        queryParam = query
+    }
+
     const ul = document.querySelector("main ul");
     const template = document.getElementById("item-template").innerHTML;
     const reqURL = "/api/v0.1/torrents?" + encodeQueryData({
-        query: query,
+        query: queryParam,
         epoch: epoch,
         lastID: lastID,
         lastOrderedValue: lastOrderedValue,
