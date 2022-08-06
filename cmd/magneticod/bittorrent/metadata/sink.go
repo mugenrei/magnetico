@@ -88,7 +88,7 @@ func NewSink(deadline time.Duration, maxNLeeches int) *Sink {
 			ms.incomingInfoHashesMx.Lock()
 			l := len(ms.incomingInfoHashes)
 			ms.incomingInfoHashesMx.Unlock()
-			zap.L().Info("Sink status",
+			zap.L().Debug("Sink status",
 				zap.Int("activeLeeches", l),
 				zap.Int("nDeleted", ms.deleted),
 				zap.Int("drainQueue", len(ms.drain)),

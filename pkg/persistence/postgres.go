@@ -3,6 +3,7 @@ package persistence
 import (
 	"database/sql"
 	"fmt"
+	"github.com/boramalper/magnetico/pkg/util"
 	"net/url"
 	"text/template"
 	"time"
@@ -81,7 +82,7 @@ func (db *postgresDatabase) AddNewTorrent(infoHash []byte, name string, files []
 	if !utf8.ValidString(name) {
 		zap.L().Warn(
 			"Ignoring a torrent whose name is not UTF-8 compliant.",
-			zap.ByteString("infoHash", infoHash),
+			util.HexField("infoHash", infoHash),
 			zap.Binary("name", []byte(name)),
 		)
 
