@@ -56,7 +56,7 @@ function myFetch(url, options) {
  *
  * Source: https://stackoverflow.com/a/9047794/4466589
  *
- * @param int dowOffset
+ * @param dowOffset int
  * @return int
  */
 Date.prototype.getWeek = function (dowOffset) {
