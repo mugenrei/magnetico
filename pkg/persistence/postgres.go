@@ -236,7 +236,7 @@ func (db *postgresDatabase) QueryTorrents(
 		{{ end }}
 			{{ if and .QueryExists .FirstPage }} WHERE {{ end }}
 		{{ if .QueryExists }} 
-			to_tsvector(replace(replace(name, '.', ' '), '-', ' ')) @@ plainto_tsquery('{{ .Query }}') 
+			to_tsvector(replace(replace(name, '.', ' '), '-', ' ')) @@ websearch_to_tsquery('{{ .Query }}') 
 		{{ end }}
 		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}
 		LIMIT {{.Limit}};
