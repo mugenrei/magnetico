@@ -176,8 +176,8 @@ func main() {
 	}
 
 	templates = make(map[string]*template.Template)
-	templates["feed"] = template.Must(template.New("feed").Funcs(templateFunctions).Parse(string(mustAsset("templates/feed.xml"))))
-	templates["homepage"] = template.Must(template.New("homepage").Funcs(templateFunctions).Parse(string(mustAsset("templates/homepage.html"))))
+	templates["feed"] = template.Must(template.New("feed").Funcs(templateFunctions).Parse(string(mustAsset("data/templates/feed.xml"))))
+	templates["homepage"] = template.Must(template.New("homepage").Funcs(templateFunctions).Parse(string(mustAsset("data/templates/homepage.html"))))
 
 	database, err = persistence.MakeDatabase(opts.Database, logger)
 	if err != nil {
@@ -201,7 +201,7 @@ func respondError(w http.ResponseWriter, statusCode int, format string, a ...int
 }
 
 func mustAsset(name string) []byte {
-	data, err := Asset(name)
+	data, err := content.ReadFile(name)
 	if err != nil {
 		zap.L().Panic("Could NOT access the requested resource! THIS IS A BUG, PLEASE REPORT",
 			zap.String("name", name), zap.Error(err))

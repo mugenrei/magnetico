@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"net/http"
 	"strings"
 	"time"
@@ -9,6 +10,9 @@ import (
 
 	"github.com/boramalper/magnetico/pkg/persistence"
 )
+
+//go:embed data
+var content embed.FS
 
 // DONE
 func rootHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +30,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func torrentsHandler(w http.ResponseWriter, r *http.Request) {
-	data := mustAsset("templates/torrents.html")
+	data, _ := content.ReadFile("data/templates/torrents.html")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	// Cache static resources for a day
 	w.Header().Set("Cache-Control", "max-age=86400")
@@ -34,7 +38,7 @@ func torrentsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func torrentsInfohashHandler(w http.ResponseWriter, r *http.Request) {
-	data := mustAsset("templates/torrent.html")
+	data, _ := content.ReadFile("data/templates/torrent.html")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	// Cache static resources for a day
 	w.Header().Set("Cache-Control", "max-age=86400")
@@ -42,7 +46,7 @@ func torrentsInfohashHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func statisticsHandler(w http.ResponseWriter, r *http.Request) {
-	data := mustAsset("templates/statistics.html")
+	data, _ := content.ReadFile("data/templates/statistics.html")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	// Cache static resources for a day
 	w.Header().Set("Cache-Control", "max-age=86400")
@@ -98,7 +102,7 @@ func feedHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func staticHandler(w http.ResponseWriter, r *http.Request) {
-	data, err := Asset(r.URL.Path[1:])
+	data, err := content.ReadFile("data/" + r.URL.Path[1:])
 	if err != nil {
 		http.NotFound(w, r)
 		return

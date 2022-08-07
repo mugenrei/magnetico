@@ -3,7 +3,6 @@ WORKDIR /magnetico
 
 RUN export PATH=$PATH:/go/bin
 RUN apk add --no-cache build-base curl git
-RUN go install -a -v github.com/go-bindata/go-bindata/...@latest
 
 ADD ./Makefile        /magnetico/
 ADD ./pkg             /magnetico/pkg
