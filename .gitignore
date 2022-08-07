@@ -1,7 +1,6 @@
 vendor/
 .idea/
 Gopkg.lock
-go.sum
 
 
 # Created by https://www.gitignore.io/api/go,linux,macos,windows
