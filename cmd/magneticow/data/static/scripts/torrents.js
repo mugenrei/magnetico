@@ -40,24 +40,24 @@ window.onload = function () {
 
         query = queryInput.value
         switch (sortDropdown.selectedIndex) {
+            case 0:
             case 1:
                 setOrderBy("TOTAL_SIZE")
                 break;
+            case 2:
             case 3:
                 setOrderBy("DISCOVERED_ON")
                 break;
+            case 4:
             case 5:
                 setOrderBy("N_FILES")
                 break;
         }
 
-        if (query !== '') {
-            setOrderBy("RELEVANCE");
-        }
+        ascending = sortDropdown.selectedIndex % 2 === 0
 
         ul.innerHTML = ""
-        lastID = null
-        lastOrderedValue = null
+        lastID = lastOrderedValue = null
         load(queryInput.value);
     };
 
@@ -115,20 +115,24 @@ function load(queryParam) {
     console.log("reqURL", reqURL);
 
     let req = new XMLHttpRequest();
+
+    function disableButtonWithMsg(msg) {
+        button.textContent = msg;
+        button.setAttribute("disabled", "");
+    }
+
     req.onreadystatechange = function () {
         if (req.readyState !== 4)
             return;
 
-        button.textContent = "Load More Results";
-        button.removeAttribute("disabled");
+        disableButtonWithMsg("Load More Results")
 
         if (req.status !== 200)
             alert(req.responseText);
 
         let torrents = JSON.parse(req.responseText);
         if (torrents.length === 0) {
-            button.textContent = "No More Results";
-            button.setAttribute("disabled", "");
+            disableButtonWithMsg("No More Results")
             return;
         }
 
@@ -144,8 +148,7 @@ function load(queryParam) {
         }
 
         if (torrents.length < 20) {
-            button.textContent = "No More Results";
-            button.setAttribute("disabled", "");
+            disableButtonWithMsg("No More Results");
         }
     };
 
