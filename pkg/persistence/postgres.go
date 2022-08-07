@@ -229,10 +229,15 @@ func (db *postgresDatabase) QueryTorrents(
 			{{ else }}
 				similarity(name, '{{ .Query }}') * -1
 			{{ end }}
-{{GTEorLTE .Ascending}} {{.LastOrderedValue}} 
-			{{ if .QueryExists }} AND {{ end }}
+			{{GTEorLTE .Ascending}} {{.LastOrderedValue}} 
+			{{ if .QueryExists }}
+			AND 
+			{{ end }}
 		{{ end }}
-			{{ if and .QueryExists .FirstPage }} WHERE {{ end }}{{ if .QueryExists }} to_tsvector(replace(name, '.', ' ')) @@ plainto_tsquery('{{ .Query }}') {{ end }}
+			{{ if and .QueryExists .FirstPage }} WHERE {{ end }}
+		{{ if .QueryExists }} 
+			to_tsvector(replace(replace(name, '.', ' '), '-', ' ')) @@ plainto_tsquery('{{ .Query }}') 
+		{{ end }}
 		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}
 		LIMIT {{.Limit}};
 	`, struct {
