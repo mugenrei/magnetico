@@ -35,9 +35,6 @@ image: image-magneticod image-magneticow
 vet:
 	go vet ./...
 
-staticcheck:
-	./misc/staticcheck/staticcheck -fail all ./...
-
 test:
 	go test ./...
 
