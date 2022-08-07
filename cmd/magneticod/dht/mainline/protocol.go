@@ -284,7 +284,7 @@ func (p *Protocol) VerifyToken(address net.IP, token []byte) bool {
 }
 
 func (p *Protocol) updateTokenSecret() {
-	for range time.Tick(10 * time.Minute) {
+	for range time.NewTicker(10 * time.Minute).C {
 		p.tokenLock.Lock()
 		copy(p.previousTokenSecret, p.currentTokenSecret)
 		_, err := rand.Read(p.currentTokenSecret)
