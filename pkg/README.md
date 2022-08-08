@@ -6,7 +6,7 @@
   
 **For REST-ful magneticow API, see [https://app.swaggerhub.com/apis/boramalper/magneticow-api/](https://app.swaggerhub.com/apis/boramalper/magneticow-api/).**
 
-## PostgreSQL database engine (only `magneticod` part implemented)
+## PostgreSQL database engine
 
 PostgreSQL database engine uses [PostgreSQL](https://www.postgresql.org/) to store indexed
 torrents. It's more performant and flexible than SQLite but requires additional software configuration.
