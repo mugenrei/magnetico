@@ -27,12 +27,12 @@ func makePostgresDatabase(url_ *url.URL) (Database, error) {
 	schema := url_.Query().Get("schema")
 	if schema == "" {
 		db.schema = "magneticod"
-		url_.Query().Set("search_path", "magneticod")
+		// url_.Query().Set("search_path", "magneticod")
 	} else {
 		db.schema = schema
-		url_.Query().Set("search_path", schema)
+		// url_.Query().Set("search_path", schema)
 	}
-	url_.Query().Del("schema")
+	// url_.Query().Del("schema")
 
 	var err error
 	db.conn, err = sql.Open("pgx", url_.String())
