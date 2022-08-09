@@ -298,7 +298,7 @@ func (db *postgresDatabase) QueryTorrents(
 func orderOnPostgreSQL(orderBy OrderingCriteria) string {
 	switch orderBy {
 	case ByRelevance:
-		return "relevance"
+		return "similarity(name, 'twistys') * -1"
 
 	case ByTotalSize:
 		return "total_size"

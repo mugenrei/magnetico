@@ -41,15 +41,18 @@ window.onload = function () {
         query = queryInput.value
         switch (sortDropdown.selectedIndex) {
             case 0:
+                setOrderBy("RELEVANCE")
+                break;
             case 1:
+            case 2:
                 setOrderBy("TOTAL_SIZE")
                 break;
-            case 2:
             case 3:
+            case 4:
                 setOrderBy("DISCOVERED_ON")
                 break;
-            case 4:
             case 5:
+            case 6:
                 setOrderBy("N_FILES")
                 break;
         }
