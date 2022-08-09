@@ -37,7 +37,7 @@ type Database interface {
 		lastOrderedValue *float64,
 		lastID *uint64,
 	) ([]TorrentMetadata, error)
-	// GetTorrents returns the TorrentExtMetadata for the torrent of the given InfoHash. Will return
+	// GetTorrent returns the TorrentExtMetadata for the torrent of the given InfoHash. Will return
 	// nil, nil if the torrent does not exist in the database.
 	GetTorrent(infoHash []byte) (*TorrentMetadata, error)
 	GetFiles(infoHash []byte) ([]File, error)
