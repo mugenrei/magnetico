@@ -211,25 +211,19 @@ func (db *postgresDatabase) QueryTorrents(
 	// executeTemplate is used to prepare the SQL query, WITH PLACEHOLDERS FOR USER INPUT.
 	sqlQuery := executeTemplate(`
 		SELECT id 
-             , info_hash
-			 , name
-			 , total_size
-			 , discovered_on
-			 , (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
+			, info_hash
+			, name
+			, total_size
+			, discovered_on
+			, (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
 			{{ if .QueryExists }}
 			, similarity(name, '{{ .Query }}') * -1 as relevance 
 			{{ else }}
-			 , 0
+			, 0
 			{{ end }}
 		FROM torrents 
 		{{ if not .FirstPage }}
-        	WHERE
-			{{ if not .QueryExists }}
-				{{.OrderOn}}
-			{{ else }}
-				similarity(name, '{{ .Query }}') * -1
-			{{ end }}
-			{{GTEorLTE .Ascending}} {{.LastOrderedValue}} 
+			WHERE {{.OrderOn}} {{GTEorLTE .Ascending}} {{.LastOrderedValue}} 
 			{{ if .QueryExists }}
 			AND 
 			{{ end }}
@@ -238,7 +232,7 @@ func (db *postgresDatabase) QueryTorrents(
 		{{ if .QueryExists }} 
 			to_tsvector(regexp_replace(name, '\W+', ' ', 'g')) @@ websearch_to_tsquery('{{ .Query }}') 
 		{{ end }}
-		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}
+		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}} 
 		LIMIT {{.Limit}};
 	`, struct {
 		FirstPage        bool
@@ -352,8 +346,8 @@ func (db *postgresDatabase) GetTorrent(infoHash []byte) (*TorrentMetadata, error
 func (db *postgresDatabase) GetFiles(infoHash []byte) ([]File, error) {
 	rows, err := db.conn.Query(`
 		SELECT
-       		f.size,
-       		f.path 
+			f.size,
+			f.path 
 		FROM files f, torrents t 
 		WHERE f.torrent_id = t.id AND t.info_hash = $1;`,
 		infoHash,
