@@ -125,7 +125,8 @@ function load(queryParam) {
         if (req.readyState !== 4)
             return;
 
-        disableButtonWithMsg("Load More Results")
+        button.textContent = "Load More Results";
+        button.removeAttribute("disabled");
 
         if (req.status !== 200)
             alert(req.responseText);
