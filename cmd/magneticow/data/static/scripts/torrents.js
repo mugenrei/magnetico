@@ -6,10 +6,11 @@ let query = (new URL(location)).searchParams.get("query")
 let orderBy, ascending;  // use `setOrderBy()` to modify orderBy
 let lastOrderedValue, lastID;
 
-
 window.onload = function () {
     if (query !== null && query !== "") {
         orderBy = "RELEVANCE";
+    } else {
+        document.getElementById("query").value = query;
     }
 
     const title = document.getElementsByTagName("title")[0];
@@ -19,6 +20,7 @@ window.onload = function () {
         input.setAttribute("value", query);
 
         setOrderBy("RELEVANCE");
+        ascending = false;
     } else {
         title.textContent = "Most recent torrents - magneticow";
 
@@ -39,6 +41,10 @@ window.onload = function () {
         const ul = document.querySelector("main ul");
 
         query = queryInput.value
+
+        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?query=' + query;
+        window.history.pushState({path: newurl}, '', newurl);
+
         switch (sortDropdown.selectedIndex) {
             case 0:
                 setOrderBy("RELEVANCE")
@@ -57,7 +63,7 @@ window.onload = function () {
                 break;
         }
 
-        ascending = sortDropdown.selectedIndex % 2 === 0
+        ascending = sortDropdown.selectedIndex % 2 === 1
 
         ul.innerHTML = ""
         lastID = lastOrderedValue = null

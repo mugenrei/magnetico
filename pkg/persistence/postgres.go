@@ -217,7 +217,7 @@ func (db *postgresDatabase) QueryTorrents(
 			, discovered_on
 			, (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
 			{{ if .QueryExists }}
-			, similarity(name, '{{ .Query }}') * -1 as relevance 
+			, similarity(name, '{{ .Query }}') as relevance 
 			{{ else }}
 			, 0
 			{{ end }}
@@ -298,7 +298,7 @@ func (db *postgresDatabase) QueryTorrents(
 func orderOnPostgreSQL(orderBy OrderingCriteria) string {
 	switch orderBy {
 	case ByRelevance:
-		return "similarity(name, 'twistys') * -1"
+		return "similarity(name, 'twistys')"
 
 	case ByTotalSize:
 		return "total_size"
